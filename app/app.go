@@ -1,0 +1,235 @@
+package app
+
+import (
+	"fmt"
+	"log/slog"
+	"sort"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/jhuggett/thingamabob/doodad"
+	"github.com/jhuggett/thingamabob/position/box"
+	"github.com/jhuggett/thingamabob/reaction"
+)
+
+func NewApp(startup func(*App)) *App {
+	app := &App{
+		startup: startup,
+		Default: *doodad.NewDefault(nil),
+
+		WaitForInitialDimensions: make(chan struct{}, 1),
+	}
+
+	app.Children().Parent = &app.Default
+	app.SetGesturer(reaction.NewGesturer())
+	app.SetLayout(box.Zeroed())
+
+	slog.Info("App initialized", "app", app, "layout", fmt.Sprintf("%p", app.Default.Layout()))
+
+	app.SetReactions(&reaction.Reactions{}, app)
+
+	app.Reactions().Add(
+		reaction.NewKeyDownReaction(
+			reaction.SpecificKeyDown(ebiten.KeyD),
+			func(event *reaction.KeyDownEvent) {
+				app.Children().PrettyPrint(0)
+				fmt.Printf("App layout: %s\n", app.Default.Layout().String())
+			},
+		),
+		reaction.NewKeyDownReaction(
+			reaction.SpecificKeyDown(ebiten.KeyR),
+			func(event *reaction.KeyDownEvent) {
+				app.Default.Layout().Recalculate()
+				slog.Info("Recalculated layout")
+			},
+		),
+		reaction.NewKeyDownReaction(
+			reaction.SpecificKeyDown(ebiten.KeyQ),
+			func(event *reaction.KeyDownEvent) {
+				doodad.ReSetup(app.Current())
+				slog.Info("Re-setup current page")
+			},
+		),
+		reaction.NewKeyDownReaction(
+			reaction.SpecificKeyDown(ebiten.KeyE),
+			func(event *reaction.KeyDownEvent) {
+				app.Gesturer().DebugPrint()
+			},
+		),
+	)
+	app.Reactions().Register(app.Gesturer(), app.Z())
+
+	return app
+}
+
+type App struct {
+	PageStack []doodad.Doodad
+
+	startup func(*App)
+
+	doodad.Default
+
+	WaitForInitialDimensions chan struct{}
+}
+
+func (g *App) Start() {
+
+	g.SetZ([]int{0, 0, 0})
+
+	g.startup(g)
+}
+
+func (g *App) Current() doodad.Doodad {
+	if len(g.PageStack) == 0 {
+		return nil
+	}
+	return g.PageStack[len(g.PageStack)-1]
+}
+
+func (g *App) SetupCurrentPage() {
+	if g.Current() != nil {
+		g.Current().Setup()
+	}
+}
+
+func (g *App) Push(page doodad.Doodad) {
+	if len(g.PageStack) > 0 {
+		g.Current().Hide()
+	}
+	g.PageStack = append(g.PageStack, page)
+
+	g.AddChild(page)
+	g.SetupCurrentPage()
+}
+
+func (g *App) Replace(page doodad.Doodad) {
+	if len(g.PageStack) > 0 {
+		g.Children().Remove(g.Current())
+		g.PageStack = g.PageStack[:len(g.PageStack)-1]
+	}
+
+	g.PageStack = append(g.PageStack, page)
+
+	g.AddChild(page)
+
+	g.SetupCurrentPage()
+
+	g.Box.Recalculate()
+}
+
+func (g *App) Pop() {
+	if len(g.PageStack) == 0 {
+		return
+	}
+
+	g.Children().Remove(g.Current())
+	g.PageStack = g.PageStack[:len(g.PageStack)-1]
+
+	if len(g.PageStack) > 0 {
+		g.Current().Show()
+	}
+
+	g.Box.Recalculate()
+}
+
+func (g *App) PopBy(count int) {
+	if len(g.PageStack) == 0 || count <= 0 {
+		return
+	}
+
+	if count > len(g.PageStack) {
+		count = len(g.PageStack)
+	}
+
+	for i := 0; i < count; i++ {
+		g.Children().Remove(g.Current())
+		g.PageStack = g.PageStack[:len(g.PageStack)-1]
+	}
+
+	if len(g.PageStack) > 0 {
+		g.Current().Show()
+	}
+
+	g.Box.Recalculate()
+}
+
+func (g *App) PopToRoot() {
+	if len(g.PageStack) == 0 {
+		return
+	}
+
+	g.PopBy(len(g.PageStack) - 1)
+}
+
+func (g *App) Update() error {
+	// if err := g.CurrentPage.Update(); err != nil {
+	// 	slog.Error("Error updating page", "error", err)
+	// }
+
+	g.Gesturer().Update()
+
+	return nil
+}
+
+func (g *App) Draw(screen *ebiten.Image) {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.Error("Recovered from panic in Draw", "error", r)
+		}
+	}()
+
+	// g.CurrentPage.Draw(screen)
+
+	// g.Children().Draw(screen)
+
+	// Should consider caching the list, have adding/moving doodads invalidate it
+
+	doodadsToDraw := g.Children().FlattenedDoodads()
+
+	sort.SliceStable(doodadsToDraw, func(i, j int) bool {
+		// return reactions[i].Depth() < reactions[j].Depth()
+
+		depthA := doodadsToDraw[i].Z()
+		depthB := doodadsToDraw[j].Z()
+
+		minLen := len(depthA)
+		if len(depthB) < minLen {
+			minLen = len(depthB)
+		}
+
+		for d := 0; d < minLen; d++ {
+			if depthA[d] < depthB[d] {
+				return true
+			} else if depthA[d] > depthB[d] {
+				return false
+			}
+		}
+
+		return len(depthA) < len(depthB)
+	})
+
+	for _, doodad := range doodadsToDraw {
+		doodad.Draw(screen)
+	}
+
+	// x, y := g.Gesturer().CurrentMouseLocation()
+	// ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Mouse: %d, %d", x, y), 4, screen.Bounds().Dy()-14)
+
+}
+
+func (g *App) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	// g.CurrentPage.SetWidthAndHeight(outsideWidth, outsideHeight)
+
+	// if g.WaitForInitialDimensions != nil {
+	// 	close(g.WaitForInitialDimensions)
+	// 	g.WaitForInitialDimensions = nil
+	// }
+
+	if g.Default.Layout().Width() != outsideWidth || g.Default.Layout().Height() != outsideHeight {
+		g.Default.Layout().SetDimensions(outsideWidth, outsideHeight)
+		g.Default.Layout().Recalculate()
+
+		doodad.ReSetup(g.Current())
+	}
+
+	return outsideWidth, outsideHeight
+}
