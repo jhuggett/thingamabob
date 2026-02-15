@@ -58,6 +58,8 @@ func NewApp(startup func(*App)) *App {
 	)
 	app.Reactions().Register(app.Gesturer(), app.Z())
 
+	app.SetApp(app)
+
 	return app
 }
 
@@ -208,6 +210,9 @@ func (g *App) Draw(screen *ebiten.Image) {
 	})
 
 	for _, doodad := range doodadsToDraw {
+		if doodad.Layout().CachingIsDisabled() {
+			doodad.Layout().Recalculate()
+		}
 		doodad.Draw(screen)
 	}
 
@@ -232,4 +237,8 @@ func (g *App) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight
 	}
 
 	return outsideWidth, outsideHeight
+}
+
+func (g *App) DoodadLayout() *box.Box {
+	return g.Default.Layout()
 }

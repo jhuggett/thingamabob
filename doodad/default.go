@@ -29,6 +29,16 @@ type Default struct {
 	statefulDoodads map[string]Doodad
 
 	background *ebiten.Image
+
+	app App
+}
+
+func (t *Default) App() App {
+	return t.app
+}
+
+func (t *Default) SetApp(app App) {
+	t.app = app
 }
 
 func (t *Default) DoOnTeardown(actions ...func()) {
@@ -130,6 +140,8 @@ func (t *Default) AddChild(doodads ...Doodad) {
 		// 	"parent", parentType,
 		// 	"child", childType,
 		// )
+
+		doodad.SetApp(t.App())
 
 		if doodad.Children() == nil {
 			doodad.SetChildren(NewChildren(doodad))

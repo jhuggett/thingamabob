@@ -1,16 +1,12 @@
 package main
 
 import (
-	"github.com/jhuggett/thingamabob/app"
 	"github.com/jhuggett/thingamabob/doodad"
 )
 
-func NewThirdPage(
-	app *app.App,
-) *ThirdPage {
+func NewThirdPage() *ThirdPage {
 	page := &ThirdPage{
 		Default: doodad.Default{},
-		App:     app,
 	}
 
 	return page
@@ -18,12 +14,10 @@ func NewThirdPage(
 
 type ThirdPage struct {
 	doodad.Default
-
-	App *app.App
 }
 
 func (p *ThirdPage) Setup() {
-	nav := NewNavBar(p.App)
+	nav := NewNavBar()
 	p.AddChild(nav)
 
 	p.Children().Setup()

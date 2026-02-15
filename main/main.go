@@ -24,9 +24,7 @@ func main() {
 		// )
 		// app.Push(firstPage)
 
-		sandboxPage := NewSandboxPage(
-			app,
-		)
+		sandboxPage := NewSandboxPage()
 		app.Push(sandboxPage)
 
 		if err := ebiten.RunGame(app); err != nil {

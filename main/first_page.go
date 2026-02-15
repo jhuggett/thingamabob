@@ -4,7 +4,6 @@ import (
 	"image/color"
 	"log/slog"
 
-	"github.com/jhuggett/thingamabob/app"
 	"github.com/jhuggett/thingamabob/button"
 	"github.com/jhuggett/thingamabob/config"
 	"github.com/jhuggett/thingamabob/doodad"
@@ -13,12 +12,9 @@ import (
 	"github.com/jhuggett/thingamabob/stack"
 )
 
-func NewFirstPage(
-	app *app.App,
-) *firstPage {
+func NewFirstPage() *firstPage {
 	page := &firstPage{
 		Default: doodad.Default{},
-		App:     app,
 	}
 
 	return page
@@ -26,13 +22,11 @@ func NewFirstPage(
 
 type firstPage struct {
 	doodad.Default
-
-	App *app.App
 }
 
 func (p *firstPage) Setup() {
 
-	navBar := NewNavBar(p.App)
+	navBar := NewNavBar()
 	p.AddChild(navBar)
 
 	titleLabel := label.New(label.Config{

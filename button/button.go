@@ -3,7 +3,6 @@ package button
 import (
 	"fmt"
 	"image/color"
-	"log/slog"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jhuggett/thingamabob/doodad"
@@ -144,20 +143,14 @@ func (w *Button) Setup() {
 		reaction.NewMouseMovedReaction(
 			doodad.MouseIsWithin[*reaction.MouseMovedEvent](w),
 			func(event *reaction.MouseMovedEvent) {
-				slog.Info("Mouse moved within button", "button", w.DebugString())
 				event.StopPropagation()
-				slog.Info("Mouse is within button")
 				if w.buttonState == ButtonStateHovered {
-					slog.Info("Button state is already Hovered")
 					return
 				}
 
 				if w.buttonState == ButtonStatePressed {
-					slog.Info("Button state is already Pressed")
 					return
 				}
-
-				slog.Info("Setting button state to Hovered")
 
 				w.buttonState = ButtonStateHovered
 				doodad.ReSetup(w)

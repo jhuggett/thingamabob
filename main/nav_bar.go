@@ -3,7 +3,6 @@ package main
 import (
 	"image/color"
 
-	"github.com/jhuggett/thingamabob/app"
 	"github.com/jhuggett/thingamabob/button"
 	"github.com/jhuggett/thingamabob/config"
 	"github.com/jhuggett/thingamabob/doodad"
@@ -12,20 +11,14 @@ import (
 	"github.com/jhuggett/thingamabob/stack"
 )
 
-func NewNavBar(
-	app *app.App,
-) *NavBar {
-	navBar := &NavBar{
-		App: app,
-	}
+func NewNavBar() *NavBar {
+	navBar := &NavBar{}
 
 	return navBar
 }
 
 type NavBar struct {
 	doodad.Default
-
-	App *app.App
 }
 
 func (n *NavBar) Setup() {
@@ -42,7 +35,7 @@ func (n *NavBar) Setup() {
 
 	firstPageButton := button.New(button.Config{
 		OnClick: func(b *button.Button) {
-			n.App.Replace(NewFirstPage(n.App))
+			n.App().Replace(NewFirstPage())
 		},
 		Config: label.Config{
 			Message: "First Page",
@@ -51,7 +44,7 @@ func (n *NavBar) Setup() {
 
 	secondPageButton := button.New(button.Config{
 		OnClick: func(b *button.Button) {
-			n.App.Replace(NewSecondPage(n.App))
+			n.App().Replace(NewSecondPage())
 		},
 		Config: label.Config{
 			Message: "Second Page",
@@ -60,7 +53,7 @@ func (n *NavBar) Setup() {
 
 	thirdPageButton := button.New(button.Config{
 		OnClick: func(b *button.Button) {
-			n.App.Replace(NewThirdPage(n.App))
+			n.App().Replace(NewThirdPage())
 		},
 		Config: label.Config{
 			Message: "Third Page",

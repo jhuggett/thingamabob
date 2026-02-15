@@ -27,6 +27,10 @@ func NewChildren(parent Doodad, children ...[]Doodad) *Children {
 	return c
 }
 
+func (c *Children) All() []Doodad {
+	return c.Doodads
+}
+
 func (c *Children) Boxes() []*box.Box {
 	boxes := make([]*box.Box, len(c.Doodads))
 	for i, doodad := range c.Doodads {

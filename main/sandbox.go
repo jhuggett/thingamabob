@@ -3,7 +3,6 @@ package main
 import (
 	"image/color"
 
-	"github.com/jhuggett/thingamabob/app"
 	"github.com/jhuggett/thingamabob/button"
 	"github.com/jhuggett/thingamabob/config"
 	"github.com/jhuggett/thingamabob/doodad"
@@ -15,16 +14,10 @@ import (
 
 type SandboxPage struct {
 	doodad.Default
-
-	App *app.App
 }
 
-func NewSandboxPage(
-	app *app.App,
-) *SandboxPage {
-	sandboxPage := &SandboxPage{
-		App: app,
-	}
+func NewSandboxPage() *SandboxPage {
+	sandboxPage := &SandboxPage{}
 
 	return sandboxPage
 }

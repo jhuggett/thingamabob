@@ -3,19 +3,15 @@ package main
 import (
 	"image/color"
 
-	"github.com/jhuggett/thingamabob/app"
 	"github.com/jhuggett/thingamabob/doodad"
 	"github.com/jhuggett/thingamabob/label"
 	"github.com/jhuggett/thingamabob/position/box"
 	"github.com/jhuggett/thingamabob/stack"
 )
 
-func NewSecondPage(
-	app *app.App,
-) *SecondPage {
+func NewSecondPage() *SecondPage {
 	page := &SecondPage{
 		Default: doodad.Default{},
-		App:     app,
 	}
 
 	return page
@@ -23,12 +19,10 @@ func NewSecondPage(
 
 type SecondPage struct {
 	doodad.Default
-
-	App *app.App
 }
 
 func (p *SecondPage) Setup() {
-	nav := NewNavBar(p.App)
+	nav := NewNavBar()
 	p.AddChild(nav)
 
 	contentStack := stack.New(stack.Config{

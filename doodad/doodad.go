@@ -32,6 +32,14 @@ func MouseIsOutside[T reaction.PositionedEvent](doodad Doodad) func(event T) boo
 	}
 }
 
+type App interface {
+	PopToRoot()
+	Replace(page Doodad)
+	Pop()
+	Push(page Doodad)
+	DoodadLayout() *box.Box
+}
+
 type Rectangle struct {
 	Width  int
 	Height int
@@ -95,6 +103,9 @@ type Doodad interface {
 
 	DebugString() string
 	DebugName() string
+
+	App() App
+	SetApp(app App)
 }
 
 type Rectangular interface {
@@ -127,5 +138,14 @@ func Setup(doodads ...Doodad) {
 		}
 
 		doodad.Reactions().Register(doodad.Gesturer(), doodad.Z())
+	}
+}
+
+func DisableCachingAllTheWayDown(doodad Doodad) {
+
+	doodad.Layout().DisableCaching()
+
+	for _, child := range doodad.Children().All() {
+		DisableCachingAllTheWayDown(child)
 	}
 }

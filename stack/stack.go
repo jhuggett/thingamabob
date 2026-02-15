@@ -17,6 +17,8 @@ type LayoutRule int
 const (
 	FitContents LayoutRule = iota
 	Fill
+	FitContentsVertically
+	FitContentsHorizontally
 )
 
 type Config struct {
@@ -162,11 +164,15 @@ func (s *Stack) Setup() {
 	s.Box.Computed(func(b *box.Box) {
 		switch s.Config.LayoutRule {
 		case FitContents:
-
 			bounding := box.Bounding(s.Children().Boxes())
 			b.SetWidth(bounding.Width() + s.Config.Padding.Left + s.Config.Padding.Right)
 			b.SetHeight(bounding.Height() + s.Config.Padding.Top + s.Config.Padding.Bottom)
-
+		case FitContentsVertically:
+			bounding := box.Bounding(s.Children().Boxes())
+			b.SetHeight(bounding.Height() + s.Config.Padding.Top + s.Config.Padding.Bottom)
+		case FitContentsHorizontally:
+			bounding := box.Bounding(s.Children().Boxes())
+			b.SetWidth(bounding.Width() + s.Config.Padding.Left + s.Config.Padding.Right)
 		case Fill:
 			// Do nothing, we fill the available space
 		}

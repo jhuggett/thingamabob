@@ -67,27 +67,40 @@ func (bm *BackgroundMusic) AddSong(song string) {
 
 func (bm *BackgroundMusic) Run(ctx context.Context) {
 	for {
-		if bm.player != nil {
-			if bm.player.IsPlaying() {
-				<-time.After(1 * time.Second)
-				continue
+		select {
+		case <-ctx.Done():
+			if bm.player != nil {
+				bm.player.Pause()
+				bm.player.Close()
 			}
+			return
+		default:
+			if bm.player != nil && bm.player.IsPlaying() {
+				select {
+				case <-ctx.Done():
+					bm.player.Pause()
+					bm.player.Close()
+					return
+				case <-time.After(1 * time.Second):
+					continue
+				}
+			}
+
+			if bm.current != "" {
+				bm.songs = append(bm.songs, bm.current)
+			}
+
+			songIndex := rand.Intn(len(bm.songs))
+			bm.current = bm.songs[songIndex]
+			bm.songs = append(bm.songs[:songIndex], bm.songs[songIndex+1:]...)
+
+			player, err := Play(bm.current)
+			if err != nil {
+				slog.Error("Failed to play song", "song", bm.current, "error", err)
+				panic(err)
+			}
+
+			bm.player = player
 		}
-
-		if bm.current != "" {
-			bm.songs = append(bm.songs, bm.current)
-		}
-
-		songIndex := rand.Intn(len(bm.songs))
-		bm.current = bm.songs[songIndex]
-		bm.songs = append(bm.songs[:songIndex], bm.songs[songIndex+1:]...)
-
-		player, err := Play(bm.current)
-		if err != nil {
-			slog.Error("Failed to play song", "song", bm.current, "error", err)
-			panic(err)
-		}
-
-		bm.player = player
 	}
 }

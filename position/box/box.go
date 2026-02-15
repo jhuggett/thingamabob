@@ -18,6 +18,22 @@ type Box struct {
 	dependents []*Box
 
 	recalculationCount int
+
+	cachingDisabled bool
+}
+
+func (b *Box) DisableCaching() *Box {
+	b.cachingDisabled = true
+	return b
+}
+
+func (b *Box) EnableCaching() *Box {
+	b.cachingDisabled = false
+	return b
+}
+
+func (b *Box) CachingIsDisabled() bool {
+	return b.cachingDisabled
 }
 
 func (b *Box) XY() (int, int) {
